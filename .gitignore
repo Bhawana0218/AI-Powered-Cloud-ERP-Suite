@@ -1,0 +1,28 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build and cache
+dist/
+build/
+.next/
+.turbo/
+coverage/
+.nyc_output/
+*.tsbuildinfo
+
+# generated artifacts
+generated/
+
+# env
+.env
+.env.*
+!.env.example
+
+# logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
