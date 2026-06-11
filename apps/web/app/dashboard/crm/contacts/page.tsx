@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { apiGet, apiPost } from "@/lib/api-helpers";
+import { useToast } from "@/lib/toast-context";
 import { Search, Plus, X, AlertCircle, RefreshCw } from "lucide-react";
 
 interface Contact {
@@ -18,6 +19,7 @@ interface Contact {
 const emptyForm = { firstName: "", lastName: "", email: "", phone: "", jobTitle: "", source: "", notes: "" };
 
 export default function ContactsPage() {
+  const { toast } = useToast();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -37,6 +39,7 @@ export default function ContactsPage() {
       setTotalPages(Math.max(1, Math.ceil(result.total / 10)));
     } catch (err: any) {
       setError(err?.message || "Failed to load contacts");
+      toast("error", "Error", err?.message || "Failed to load contacts");
     } finally {
       setLoading(false);
     }
@@ -52,8 +55,10 @@ export default function ContactsPage() {
       setForm(emptyForm);
       setPage(1);
       fetchContacts();
+      toast("success", "Created", "Contact created successfully");
     } catch (err: any) {
       setError(err?.response?.data?.message || err?.message || "Failed to save contact");
+      toast("error", "Error", err?.response?.data?.message || err?.message || "Failed to save contact");
     } finally {
       setSaving(false);
     }

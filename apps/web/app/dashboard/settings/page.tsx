@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { apiGet, apiPatch } from "@/lib/api-helpers";
 import { useAuthStore } from "@/lib/auth-store";
+import { useToast } from "@/lib/toast-context";
 import { Building2, Save, AlertCircle, CheckCircle2 } from "lucide-react";
 
 interface Company {
@@ -19,6 +20,7 @@ export default function SettingsPage() {
   const [form, setForm] = useState({
     name: "", website: "", industry: "", size: "", address: "", phone: "",
   });
+  const { toast } = useToast();
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -42,6 +44,7 @@ export default function SettingsPage() {
         });
       } catch (err: any) {
         setError(err?.response?.data?.message || err?.message || "Failed to load company");
+        toast("error", "Error", err?.response?.data?.message || err?.message || "Failed to load company");
       } finally {
         setLoading(false);
       }
@@ -57,8 +60,10 @@ export default function SettingsPage() {
     try {
       await apiPatch(`/companies/${companyId}`, form);
       setSuccess("Settings saved successfully!");
+      toast("success", "Updated", "Settings saved successfully");
     } catch (err: any) {
       setError(err?.response?.data?.message || err?.message || "Failed to save settings");
+      toast("error", "Error", err?.response?.data?.message || err?.message || "Failed to save settings");
     } finally {
       setSaving(false);
     }

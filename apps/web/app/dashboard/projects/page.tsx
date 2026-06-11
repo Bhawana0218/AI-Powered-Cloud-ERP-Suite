@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { apiGet, apiPost } from "@/lib/api-helpers";
+import { useToast } from "@/lib/toast-context";
 import { Plus, X, FolderKanban, AlertCircle, RefreshCw } from "lucide-react";
 import Link from "next/link";
 
@@ -15,6 +16,7 @@ interface Project {
 const emptyForm = { name: "", description: "", status: "PLANNING", startDate: "", endDate: "" };
 
 export default function ProjectsPage() {
+  const { toast } = useToast();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -30,6 +32,7 @@ export default function ProjectsPage() {
       setProjects(result.data as any[]);
     } catch (err: any) {
       setError(err?.message || "Failed to load projects");
+      toast("error", "Error", err?.message || "Failed to load projects");
     } finally {
       setLoading(false);
     }
@@ -44,8 +47,10 @@ export default function ProjectsPage() {
       setShowModal(false);
       setForm(emptyForm);
       fetchProjects();
+      toast("success", "Created", "Project created successfully");
     } catch (err: any) {
       setError(err?.response?.data?.message || err?.message || "Failed to save project");
+      toast("error", "Error", err?.response?.data?.message || err?.message || "Failed to save project");
     } finally {
       setSaving(false);
     }

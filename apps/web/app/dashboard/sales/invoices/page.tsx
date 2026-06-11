@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { apiGet, apiPost } from "@/lib/api-helpers";
+import { useToast } from "@/lib/toast-context";
 import { Plus, X, Trash2, AlertCircle, RefreshCw } from "lucide-react";
 
 interface Invoice {
@@ -21,6 +22,7 @@ interface LineItem {
 const emptyLineItem: LineItem = { description: "", quantity: 1, unitPrice: 0 };
 
 export default function InvoicesPage() {
+  const { toast } = useToast();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -40,6 +42,7 @@ export default function InvoicesPage() {
       setTotalPages(Math.max(1, Math.ceil(result.total / 10)));
     } catch (err: any) {
       setError(err?.message || "Failed to load invoices");
+      toast("error", "Error", err?.message || "Failed to load invoices");
     } finally {
       setLoading(false);
     }
@@ -58,8 +61,10 @@ export default function InvoicesPage() {
       setLineItems([{ ...emptyLineItem }]);
       setPage(1);
       fetchInvoices();
+      toast("success", "Created", "Invoice created successfully");
     } catch (err: any) {
       setError(err?.response?.data?.message || err?.message || "Failed to create invoice");
+      toast("error", "Error", err?.response?.data?.message || err?.message || "Failed to create invoice");
     } finally {
       setSaving(false);
     }

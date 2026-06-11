@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { apiGetOne, apiPost } from "@/lib/api-helpers";
+import { useToast } from "@/lib/toast-context";
 import { Plus, X, Calendar, User, AlertCircle, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +36,7 @@ const emptyTaskForm = { title: "", description: "", status: "TODO", priority: "M
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const { toast } = useToast();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -50,6 +52,7 @@ export default function ProjectDetailPage() {
       setProject(proj);
     } catch (err: any) {
       setError(err?.message || "Failed to load project");
+      toast("error", "Error", err?.message || "Failed to load project");
     } finally {
       setLoading(false);
     }
@@ -64,8 +67,10 @@ export default function ProjectDetailPage() {
       setShowTaskModal(false);
       setTaskForm(emptyTaskForm);
       fetchData();
+      toast("success", "Created", "Task added successfully");
     } catch (err: any) {
       setError(err?.response?.data?.message || err?.message || "Failed to add task");
+      toast("error", "Error", err?.response?.data?.message || err?.message || "Failed to add task");
     } finally {
       setSaving(false);
     }

@@ -1,4 +1,5 @@
 import { Controller, Post, Get, Body, HttpCode, HttpStatus, UseGuards, Request } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { Public } from './public.decorator';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -20,6 +21,18 @@ export class AuthController {
   async login(@Body() dto: { email: string; password: string }) {
     const result = await this.auth.login(dto.email, dto.password);
     return { ...result, email: dto.email };
+  }
+
+  @Public()
+  @Get('health')
+  health() {
+    return { status: 'ok', uptime: process.uptime(), timestamp: new Date().toISOString() };
+  }
+
+  @Public()
+  @Post('refresh')
+  async refresh(@Body() dto: { refreshToken: string }) {
+    return this.auth.refresh(dto.refreshToken);
   }
 
   @UseGuards(JwtAuthGuard)

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { apiGet } from "@/lib/api-helpers";
+import { useToast } from "@/lib/toast-context";
 import { Package, AlertTriangle, AlertCircle, RefreshCw } from "lucide-react";
 
 interface Product {
@@ -14,6 +15,7 @@ interface Product {
 }
 
 export default function InventoryPage() {
+  const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -26,6 +28,7 @@ export default function InventoryPage() {
       setProducts(result.data as any[]);
     } catch (err: any) {
       setError(err?.message || "Failed to load inventory");
+      toast("error", "Error", err?.message || "Failed to load inventory");
     } finally {
       setLoading(false);
     }

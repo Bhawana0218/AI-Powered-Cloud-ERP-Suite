@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { apiGet, apiPost, apiDelete } from "@/lib/api-helpers";
+import { useToast } from "@/lib/toast-context";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Building2, Plus, X, Trash2, AlertCircle, RefreshCw, Loader2 } from "lucide-react";
 
 interface Department {
@@ -10,6 +12,7 @@ interface Department {
 }
 
 export default function DepartmentsPage() {
+  const { toast } = useToast();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -17,6 +20,7 @@ export default function DepartmentsPage() {
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string; label: string } | null>(null);
 
   const fetchDepartments = async () => {
     setLoading(true);
@@ -26,6 +30,7 @@ export default function DepartmentsPage() {
       setDepartments(result.data as any[]);
     } catch (err: any) {
       setError(err?.message || "Failed to load departments");
+      toast("error", "Error", err?.message || "Failed to load departments");
     } finally {
       setLoading(false);
     }
@@ -41,21 +46,24 @@ export default function DepartmentsPage() {
       setShowForm(false);
       setName("");
       fetchDepartments();
+      toast("success", "Created", "Department created successfully");
     } catch (err: any) {
       setError(err?.response?.data?.message || err?.message || "Failed to create department");
+      toast("error", "Error", err?.response?.data?.message || err?.message || "Failed to create department");
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this department?")) return;
     setDeletingId(id);
     try {
       await apiDelete(`/hr/departments/${id}`);
+      toast("success", "Deleted", "Department deleted successfully");
       fetchDepartments();
     } catch (err: any) {
       setError(err?.response?.data?.message || err?.message || "Failed to delete department");
+      toast("error", "Error", err?.response?.data?.message || err?.message || "Failed to delete department");
     } finally {
       setDeletingId(null);
     }
@@ -78,6 +86,7 @@ export default function DepartmentsPage() {
   }
 
   return (
+    <>
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-zinc-800">Departments</h1>
@@ -108,7 +117,7 @@ export default function DepartmentsPage() {
                     <p className="text-xs text-zinc-500">{d.employeeCount} employee(s)</p>
                   </div>
                 </div>
-                <button onClick={() => handleDelete(d.id)} disabled={deletingId === d.id} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg disabled:opacity-50 transition-colors">
+                <button onClick={() => setConfirmDelete({ id: d.id, label: d.name })} disabled={deletingId === d.id} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg disabled:opacity-50 transition-colors">
                   {deletingId === d.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                 </button>
               </div>
@@ -135,5 +144,19 @@ export default function DepartmentsPage() {
         </div>
       )}
     </div>
+      <ConfirmDialog
+        open={!!confirmDelete}
+        title="Confirm Deletion"
+        message={`Are you sure you want to delete ${confirmDelete?.label || "this department"}? This action cannot be undone.`}
+        variant="danger"
+        confirmLabel="Delete"
+        onConfirm={async () => {
+          if (!confirmDelete) return;
+          await handleDelete(confirmDelete.id);
+          setConfirmDelete(null);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+      />
+    </>
   );
 }

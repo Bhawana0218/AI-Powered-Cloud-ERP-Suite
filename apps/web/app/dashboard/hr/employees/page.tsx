@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { apiGet, apiPost } from "@/lib/api-helpers";
+import { useToast } from "@/lib/toast-context";
 import { Plus, X, AlertCircle, RefreshCw } from "lucide-react";
 
 interface Employee {
@@ -16,6 +17,7 @@ interface Employee {
 const emptyForm = { firstName: "", lastName: "", email: "", position: "", salary: 0, departmentId: "" };
 
 export default function EmployeesPage() {
+  const { toast } = useToast();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
   const [page, setPage] = useState(1);
@@ -35,6 +37,7 @@ export default function EmployeesPage() {
       setTotalPages(Math.max(1, Math.ceil(result.total / 10)));
     } catch (err: any) {
       setError(err?.message || "Failed to load employees");
+      toast("error", "Error", err?.message || "Failed to load employees");
     } finally {
       setLoading(false);
     }
@@ -60,8 +63,10 @@ export default function EmployeesPage() {
       setForm(emptyForm);
       setPage(1);
       fetchEmployees();
+      toast("success", "Created", "Employee created successfully");
     } catch (err: any) {
       setError(err?.response?.data?.message || err?.message || "Failed to save employee");
+      toast("error", "Error", err?.response?.data?.message || err?.message || "Failed to save employee");
     } finally {
       setSaving(false);
     }
