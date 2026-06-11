@@ -9,7 +9,7 @@ interface Invoice {
   customerName: string;
   total: number;
   status: string;
-  date: string;
+  issueDate: string;
 }
 
 interface LineItem {
@@ -52,7 +52,7 @@ export default function InvoicesPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await apiPost("/sales/invoices", { customerName, lineItems });
+      await apiPost("/sales/invoices", { customerName, items: lineItems });
       setShowModal(false);
       setCustomerName("");
       setLineItems([{ ...emptyLineItem }]);
@@ -116,7 +116,7 @@ export default function InvoicesPage() {
                     "bg-amber-100 text-amber-700"
                   }`}>{inv.status}</span>
                 </td>
-                <td className="px-4 py-3 text-zinc-500">{inv.date ? new Date(inv.date).toLocaleDateString() : "-"}</td>
+                <td className="px-4 py-3 text-zinc-500">{inv.issueDate ? new Date(inv.issueDate).toLocaleDateString() : "-"}</td>
               </tr>
             ))}
           </tbody>

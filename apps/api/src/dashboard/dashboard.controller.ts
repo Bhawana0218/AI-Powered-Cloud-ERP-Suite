@@ -16,4 +16,9 @@ export class DashboardController {
   getRecentActivity(@Request() req) {
     return this.dashboard.getRecentActivity(req.user.companyId);
   }
+
+  @Get('overview')
+  getOverview(@Request() req) {
+    return this.dashboard.getOverview(req.user.companyId);
+  }
 }

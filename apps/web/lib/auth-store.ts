@@ -16,7 +16,7 @@ interface AuthState {
   loading: boolean;
   setUser: (user: User | null) => void;
   login: (email: string, password: string) => Promise<User>;
-  register: (email: string, password: string, firstName?: string, lastName?: string) => Promise<User>;
+  register: (email: string, password: string, firstName?: string, lastName?: string, companyName?: string) => Promise<User>;
   logout: () => void;
   loadUser: () => Promise<void>;
 }
@@ -58,8 +58,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     return user;
   },
 
-  register: async (email, password, firstName, lastName) => {
-    const { data } = await api.post('/auth/register', { email, password, firstName, lastName });
+  register: async (email, password, firstName, lastName, companyName) => {
+    const { data } = await api.post('/auth/register', { email, password, firstName, lastName, companyName });
     localStorage.setItem('token', data.accessToken);
     const user = await fetchUser(data.accessToken);
     if (!user) throw new Error('Failed to load user profile');

@@ -49,4 +49,10 @@ export class DashboardService {
 
     return { recentDeals, recentInvoices, recentProjects, recentContacts };
   }
+
+  async getOverview(companyId: string) {
+    const stats = await this.getStats(companyId);
+    const activity = await this.getRecentActivity(companyId);
+    return { ...stats, ...activity };
+  }
 }

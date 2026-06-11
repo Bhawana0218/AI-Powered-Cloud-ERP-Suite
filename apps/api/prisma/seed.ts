@@ -1,15 +1,12 @@
 import 'dotenv/config';
-import { PrismaClient } from '../generated/prisma/client';
+import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { PrismaPg } from '@prisma/adapter-pg';
 
-const databaseUrl = process.env.DATABASE_URL;
-if (!databaseUrl) {
+if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL is not set. Add it to apps/api/.env');
 }
 
-const adapter = new PrismaPg({ connectionString: databaseUrl });
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient();
 
 async function main() {
   console.log('Seeding database...');
@@ -245,6 +242,45 @@ async function main() {
     }
   }
   console.log('Tasks created:', taskData.length);
+
+  const vendorData = [
+    { name: 'TechSupply Global', email: 'orders@techsupply.com', phone: '+1-555-0201', rating: 4.8 },
+    { name: 'Office Essentials Co', email: 'sales@officeess.com', phone: '+1-555-0202', rating: 4.5 },
+    { name: 'CloudParts Inc', email: 'procurement@cloudparts.io', phone: '+1-555-0203', rating: 4.9 },
+    { name: 'Pacific Logistics', email: 'ops@pacificlog.com', phone: '+1-555-0204', rating: 4.2 },
+  ];
+  const vendors = [];
+  for (const v of vendorData) {
+    const vendor = await prisma.vendor.create({ data: { ...v, companyId: company.id } });
+    vendors.push(vendor);
+  }
+  console.log('Vendors created:', vendors.length);
+
+  for (let i = 0; i < 5; i++) {
+    await prisma.purchaseOrder.create({
+      data: {
+        number: `PO-2026-${String(i + 1).padStart(4, '0')}`,
+        status: (['SENT', 'RECEIVED', 'DRAFT', 'SENT', 'RECEIVED'] as const)[i],
+        total: [12500, 8400, 3200, 15600, 9800][i],
+        vendorId: vendors[i % vendors.length].id,
+        companyId: company.id,
+        expectedAt: new Date(Date.now() + (i + 1) * 7 * 24 * 60 * 60 * 1000),
+      },
+    });
+  }
+  console.log('Purchase orders created: 5');
+
+  const notificationData = [
+    { title: 'Low stock alert', message: 'Wireless Mouse stock below reorder threshold (12 units remaining)', type: 'WARNING' as const },
+    { title: 'Invoice paid', message: 'INV-2026-0042 marked as paid — $24,500 received', type: 'SUCCESS' as const },
+    { title: 'AI forecast ready', message: 'Weekly demand forecast model retrained with MAPE 9.8%', type: 'INFO' as const },
+    { title: 'PO approved', message: 'Purchase order PO-2026-0003 sent to TechSupply Global', type: 'INFO' as const },
+    { title: 'Deal won', message: 'Enterprise License deal closed — $85,000 added to pipeline', type: 'SUCCESS' as const },
+  ];
+  for (const n of notificationData) {
+    await prisma.notification.create({ data: { ...n, userId: admin.id } });
+  }
+  console.log('Notifications created:', notificationData.length);
 
   console.log('\n--- Seed Complete ---');
   console.log('Login: admin@erp.local / admin123');

@@ -9,8 +9,8 @@ export class AuthController {
 
   @Public()
   @Post('register')
-  async register(@Body() dto: { email: string; password: string; firstName?: string; lastName?: string }) {
-    const result = await this.auth.register(dto.email, dto.password, dto.firstName, dto.lastName);
+  async register(@Body() dto: { email: string; password: string; firstName?: string; lastName?: string; companyName?: string }) {
+    const result = await this.auth.register(dto.email, dto.password, dto.firstName, dto.lastName, dto.companyName);
     return { ...result, email: dto.email };
   }
 

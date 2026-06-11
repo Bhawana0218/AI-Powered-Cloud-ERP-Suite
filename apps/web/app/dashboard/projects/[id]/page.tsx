@@ -1,8 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { apiGet, apiPost } from "@/lib/api-helpers";
+import { apiGetOne, apiPost } from "@/lib/api-helpers";
 import { Plus, X, Calendar, User, AlertCircle, RefreshCw } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Task {
   id: string;
@@ -21,7 +26,9 @@ interface Project {
   status: string;
   startDate: string;
   endDate: string;
+  budget?: number;
   owner?: { firstName: string; lastName: string };
+  tasks?: Task[];
 }
 
 const emptyTaskForm = { title: "", description: "", status: "TODO", priority: "MEDIUM", assigneeId: "", dueDate: "" };
@@ -29,7 +36,6 @@ const emptyTaskForm = { title: "", description: "", status: "TODO", priority: "M
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [project, setProject] = useState<Project | null>(null);
-  const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showTaskModal, setShowTaskModal] = useState(false);
@@ -40,13 +46,8 @@ export default function ProjectDetailPage() {
     setLoading(true);
     setError("");
     try {
-      const [projRes, tasksRes] = await Promise.all([
-        apiGet(`/projects/${id}`),
-        apiGet(`/projects/${id}/tasks`),
-      ]);
-      const rawProj = (projRes as any).data;
-      setProject(rawProj?.project ?? rawProj ?? null);
-      setTasks(tasksRes.data as any[]);
+      const proj = await apiGetOne<Project>(`/projects/${id}`);
+      setProject(proj);
     } catch (err: any) {
       setError(err?.message || "Failed to load project");
     } finally {
@@ -59,7 +60,7 @@ export default function ProjectDetailPage() {
   const handleAddTask = async () => {
     setSaving(true);
     try {
-      await apiPost(`/projects/${id}/tasks`, taskForm);
+      await apiPost("/projects/tasks", { ...taskForm, projectId: id });
       setShowTaskModal(false);
       setTaskForm(emptyTaskForm);
       fetchData();
@@ -70,23 +71,18 @@ export default function ProjectDetailPage() {
     }
   };
 
+  const tasks = project?.tasks || [];
+
   if (loading) {
     return (
-      <div className="space-y-6 animate-pulse">
-        <div className="bg-white rounded-xl shadow-sm border border-zinc-200 p-6">
-          <div className="h-6 bg-zinc-200 rounded w-1/3 mb-3" />
-          <div className="h-4 bg-zinc-200 rounded w-2/3 mb-2" />
-          <div className="h-4 bg-zinc-200 rounded w-1/4" />
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-zinc-200 p-6">
-          <div className="h-5 bg-zinc-200 rounded w-1/4 mb-4" />
-          {[1, 2, 3].map((i) => <div key={i} className="h-12 bg-zinc-200 rounded mb-3" />)}
-        </div>
+      <div className="space-y-6">
+        <Skeleton className="h-32" />
+        <Skeleton className="h-64" />
       </div>
     );
   }
 
-  if (!project && !error) return <p className="text-zinc-500">Project not found.</p>;
+  if (!project && !error) return <p className="text-muted-foreground">Project not found.</p>;
 
   return (
     <div className="space-y-6">
@@ -98,126 +94,109 @@ export default function ProjectDetailPage() {
       )}
       {project && (
         <>
-          <div className="bg-white rounded-xl shadow-sm border border-zinc-200 p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h1 className="text-xl font-semibold text-zinc-800">{project.name}</h1>
-                <p className="text-sm text-zinc-500 mt-1">{project.description || "No description"}</p>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h1 className="text-xl font-semibold">{project.name}</h1>
+                  <p className="text-sm text-muted-foreground mt-1">{project.description || "No description"}</p>
+                </div>
+                <Badge variant={project.status === "active" ? "brand" : "secondary"}>
+                  {project.status?.replace(/_/g, " ")}
+                </Badge>
               </div>
-              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                project.status === "COMPLETED" ? "bg-emerald-100 text-emerald-700" :
-                project.status === "IN_PROGRESS" ? "bg-blue-100 text-blue-700" :
-                project.status === "ON_HOLD" ? "bg-amber-100 text-amber-700" :
-                "bg-zinc-100 text-zinc-700"
-              }`}>{project.status?.replace(/_/g, " ")}</span>
-            </div>
-            <div className="flex flex-wrap gap-4 text-sm text-zinc-500">
-              {project.startDate && (
-                <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> Start: {new Date(project.startDate).toLocaleDateString()}</span>
-              )}
-              {project.endDate && (
-                <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> End: {new Date(project.endDate).toLocaleDateString()}</span>
-              )}
-              {project.owner && (
-                <span className="flex items-center gap-1"><User className="w-4 h-4" /> {project.owner.firstName} {project.owner.lastName}</span>
-              )}
-            </div>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm border border-zinc-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-zinc-800">Tasks ({tasks.length})</h2>
-              <button onClick={() => setShowTaskModal(true)} className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+              <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                {project.startDate && (
+                  <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> Start: {new Date(project.startDate).toLocaleDateString()}</span>
+                )}
+                {project.endDate && (
+                  <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> End: {new Date(project.endDate).toLocaleDateString()}</span>
+                )}
+                {project.budget && (
+                  <span className="font-medium text-foreground">Budget: ${Number(project.budget).toLocaleString()}</span>
+                )}
+                {project.owner && (
+                  <span className="flex items-center gap-1"><User className="w-4 h-4" /> {project.owner.firstName} {project.owner.lastName}</span>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Tasks ({tasks.length})</CardTitle>
+              <Button size="sm" onClick={() => setShowTaskModal(true)} className="gap-2 gradient-brand text-white border-0">
                 <Plus className="w-4 h-4" /> Add Task
-              </button>
-            </div>
-            {tasks.length === 0 ? (
-              <p className="text-sm text-zinc-400 text-center py-6">No tasks yet</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-zinc-50 border-b border-zinc-200">
-                    <tr>
-                      {["Title", "Status", "Priority", "Assignee", "Due Date"].map((h) => (
-                        <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tasks.map((t) => (
-                      <tr key={t.id} className="border-b border-zinc-100 hover:bg-zinc-50">
-                        <td className="px-4 py-3 font-medium">{t.title}</td>
-                        <td className="px-4 py-3">
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                            t.status === "DONE" ? "bg-emerald-100 text-emerald-700" :
-                            t.status === "IN_PROGRESS" ? "bg-blue-100 text-blue-700" :
-                            "bg-zinc-100 text-zinc-600"
-                          }`}>{t.status?.replace(/_/g, " ")}</span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                            t.priority === "HIGH" || t.priority === "CRITICAL" ? "bg-red-100 text-red-700" :
-                            t.priority === "MEDIUM" ? "bg-amber-100 text-amber-700" :
-                            "bg-zinc-100 text-zinc-600"
-                          }`}>{t.priority}</span>
-                        </td>
-                        <td className="px-4 py-3 text-zinc-500">{t.assignee ? `${t.assignee.firstName} ${t.assignee.lastName}` : "-"}</td>
-                        <td className="px-4 py-3 text-zinc-500">{t.dueDate ? new Date(t.dueDate).toLocaleDateString() : "-"}</td>
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {tasks.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">No tasks yet</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="border-b border-border">
+                      <tr>
+                        {["Title", "Status", "Priority", "Assignee", "Due Date"].map((h) => (
+                          <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase">{h}</th>
+                        ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+                    </thead>
+                    <tbody>
+                      {tasks.map((t) => (
+                        <tr key={t.id} className="border-b border-border/50 hover:bg-muted/30">
+                          <td className="px-4 py-3 font-medium">{t.title}</td>
+                          <td className="px-4 py-3">
+                            <Badge variant={t.status === "DONE" ? "success" : t.status === "IN_PROGRESS" ? "brand" : "secondary"}>
+                              {t.status?.replace(/_/g, " ")}
+                            </Badge>
+                          </td>
+                          <td className="px-4 py-3">
+                            <Badge variant={t.priority === "HIGH" || t.priority === "URGENT" ? "destructive" : t.priority === "MEDIUM" ? "warning" : "secondary"}>
+                              {t.priority}
+                            </Badge>
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">{t.assignee ? `${t.assignee.firstName} ${t.assignee.lastName}` : "—"}</td>
+                          <td className="px-4 py-3 text-muted-foreground">{t.dueDate ? new Date(t.dueDate).toLocaleDateString() : "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </>
       )}
+
       {showTaskModal && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-lg mx-4 shadow-xl">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-card rounded-xl p-6 w-full max-w-lg mx-4 shadow-xl border border-border">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-zinc-800">Add Task</h2>
-              <button onClick={() => setShowTaskModal(false)} className="p-1 hover:bg-zinc-100 rounded-lg"><X className="w-5 h-5 text-zinc-500" /></button>
+              <h2 className="text-lg font-semibold">Add Task</h2>
+              <button onClick={() => setShowTaskModal(false)}><X className="w-5 h-5 text-muted-foreground" /></button>
             </div>
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">Title</label>
-                <input value={taskForm.title} onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })} className="w-full px-3 py-2 border border-zinc-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">Description</label>
-                <textarea value={taskForm.description} onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })} rows={3} className="w-full px-3 py-2 border border-zinc-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-              </div>
+              <Input placeholder="Title" value={taskForm.title} onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })} />
+              <textarea value={taskForm.description} onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })} rows={3} placeholder="Description" className="w-full px-3 py-2 border border-input rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ring/50" />
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-1">Status</label>
-                  <select value={taskForm.status} onChange={(e) => setTaskForm({ ...taskForm, status: e.target.value })} className="w-full px-3 py-2 border border-zinc-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <option value="TODO">To Do</option>
-                    <option value="IN_PROGRESS">In Progress</option>
-                    <option value="DONE">Done</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-1">Priority</label>
-                  <select value={taskForm.priority} onChange={(e) => setTaskForm({ ...taskForm, priority: e.target.value })} className="w-full px-3 py-2 border border-zinc-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <option value="LOW">Low</option>
-                    <option value="MEDIUM">Medium</option>
-                    <option value="HIGH">High</option>
-                    <option value="CRITICAL">Critical</option>
-                  </select>
-                </div>
+                <select value={taskForm.status} onChange={(e) => setTaskForm({ ...taskForm, status: e.target.value })} className="h-9 rounded-lg border border-input px-3 text-sm">
+                  <option value="TODO">To Do</option>
+                  <option value="IN_PROGRESS">In Progress</option>
+                  <option value="DONE">Done</option>
+                </select>
+                <select value={taskForm.priority} onChange={(e) => setTaskForm({ ...taskForm, priority: e.target.value })} className="h-9 rounded-lg border border-input px-3 text-sm">
+                  <option value="LOW">Low</option>
+                  <option value="MEDIUM">Medium</option>
+                  <option value="HIGH">High</option>
+                  <option value="URGENT">Urgent</option>
+                </select>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">Assignee ID</label>
-                <input value={taskForm.assigneeId} onChange={(e) => setTaskForm({ ...taskForm, assigneeId: e.target.value })} className="w-full px-3 py-2 border border-zinc-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">Due Date</label>
-                <input type="date" value={taskForm.dueDate} onChange={(e) => setTaskForm({ ...taskForm, dueDate: e.target.value })} className="w-full px-3 py-2 border border-zinc-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-              </div>
+              <Input type="date" value={taskForm.dueDate} onChange={(e) => setTaskForm({ ...taskForm, dueDate: e.target.value })} />
             </div>
             <div className="flex justify-end gap-3 mt-6">
-              <button onClick={() => setShowTaskModal(false)} className="px-4 py-2 text-sm border border-zinc-300 rounded-lg hover:bg-zinc-50 transition-colors">Cancel</button>
-              <button onClick={handleAddTask} disabled={saving} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">{saving ? "Saving..." : "Save"}</button>
+              <Button variant="outline" onClick={() => setShowTaskModal(false)}>Cancel</Button>
+              <Button onClick={handleAddTask} disabled={saving} className="gradient-brand text-white border-0">{saving ? "Saving..." : "Save"}</Button>
             </div>
           </div>
         </div>

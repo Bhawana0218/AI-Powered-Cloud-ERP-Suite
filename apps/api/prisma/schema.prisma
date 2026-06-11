@@ -1,10 +1,10 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum UserRole {
@@ -45,6 +45,20 @@ enum TaskPriority {
   URGENT
 }
 
+enum POStatus {
+  DRAFT
+  SENT
+  RECEIVED
+  CANCELLED
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ALERT
+}
+
 model User {
   id         String   @id @default(cuid())
   email      String   @unique
@@ -66,6 +80,7 @@ model User {
   projects         Project[] @relation("ProjectOwner")
   assignedTasks    Task[]    @relation("TaskAssignee")
   createdTasks     Task[]    @relation("TaskCreator")
+  notifications    Notification[]
 
   @@map("users")
 }
@@ -94,6 +109,8 @@ model Company {
   departments Department[]
   employees Employee[]
   projects Project[]
+  vendors Vendor[]
+  purchaseOrders PurchaseOrder[]
 
   @@map("companies")
 }
@@ -270,4 +287,52 @@ model Task {
   updatedAt   DateTime   @updatedAt
 
   @@map("tasks")
+}
+
+model Vendor {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  address   String?
+  rating    Float    @default(4.0)
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  purchaseOrders PurchaseOrder[]
+
+  @@map("vendors")
+}
+
+model PurchaseOrder {
+  id          String   @id @default(cuid())
+  number      String   @unique
+  status      POStatus @default(DRAFT)
+  total       Float    @default(0)
+  notes       String?
+  vendorId    String
+  vendor      Vendor   @relation(fields: [vendorId], references: [id])
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id])
+  expectedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("purchase_orders")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  title     String
+  message   String
+  type      NotificationType @default(INFO)
+  read      Boolean          @default(false)
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime         @default(now())
+
+  @@map("notifications")
 }

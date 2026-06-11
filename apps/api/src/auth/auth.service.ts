@@ -10,14 +10,47 @@ export class AuthService {
     private jwt: JwtService,
   ) {}
 
-  async register(email: string, password: string, firstName?: string, lastName?: string) {
+  async register(
+    email: string,
+    password: string,
+    firstName?: string,
+    lastName?: string,
+    companyName?: string,
+  ) {
     const existing = await this.prisma.user.findUnique({ where: { email } });
     if (existing) throw new ConflictException('Email already exists');
 
     const hashed = await bcrypt.hash(password, 10);
+    const slugBase = (companyName || email.split('@')[0] || 'company')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+    const slug = `${slugBase}-${Date.now().toString(36)}`;
+
     const user = await this.prisma.user.create({
-      data: { email, password: hashed, firstName, lastName },
+      data: {
+        email,
+        password: hashed,
+        firstName,
+        lastName,
+        role: 'ADMIN',
+        createdCompanies: {
+          create: {
+            name: companyName || `${firstName || 'My'}'s Company`,
+            slug,
+          },
+        },
+      },
+      include: { createdCompanies: true },
     });
+
+    const company = user.createdCompanies[0];
+    if (company) {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { companyId: company.id },
+      });
+    }
 
     return this.signToken(user.id, user.email);
   }

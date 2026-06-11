@@ -10,6 +10,10 @@ import { SalesModule } from './sales/sales.module';
 import { HrModule } from './hr/hr.module';
 import { ProjectsModule } from './projects/projects.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { AnalyticsModule } from './analytics/analytics.module';
+import { AiModule } from './ai/ai.module';
+import { SupplyChainModule } from './supply-chain/supply-chain.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -22,6 +26,10 @@ import { DashboardModule } from './dashboard/dashboard.module';
     HrModule,
     ProjectsModule,
     DashboardModule,
+    AnalyticsModule,
+    AiModule,
+    SupplyChainModule,
+    NotificationsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

@@ -3,7 +3,7 @@ import api from './api';
 export function extractData(res: any, fallback: any = []) {
   if (!res?.data) return fallback;
   const d = res.data;
-  return d.data ?? d.contacts ?? d.deals ?? d.products ?? d.invoices ?? d.employees ?? d.departments ?? d.projects ?? d.tasks ?? d.pipeline ?? d.stats ?? d;
+  return d.data ?? d.contacts ?? d.deals ?? d.products ?? d.invoices ?? d.employees ?? d.departments ?? d.projects ?? d.tasks ?? d.pipeline ?? d.stats ?? d.forecasts ?? d.vendors ?? d;
 }
 
 export function extractTotalPages(res: any, defaultLimit = 10) {
@@ -29,6 +29,16 @@ export async function apiGet<T = any>(url: string, params?: any): Promise<{ data
   } catch (err: any) {
     console.error(`API GET ${url} failed:`, err?.message);
     return { data: [], total: 0, page: 1 };
+  }
+}
+
+export async function apiGetOne<T = any>(url: string): Promise<T | null> {
+  try {
+    const res = await api.get(url);
+    return res.data as T;
+  } catch (err: any) {
+    console.error(`API GET ${url} failed:`, err?.message);
+    return null;
   }
 }
 
