@@ -177,6 +177,7 @@ pnpm docker:up
 
 ### Docker API/daemon errors
 
+
 Examples:
 
 - `failed to connect to the docker API at npipe...`
