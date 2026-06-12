@@ -1,7 +1,8 @@
-import { Controller, Get, Patch, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
+import { CreateNotificationDto } from './dto/notifications.dto';
 
 @UseGuards(JwtAuthGuard)
 @Roles('ADMIN', 'MANAGER', 'STAFF')
@@ -27,5 +28,16 @@ export class NotificationsController {
   @Patch(':id/read')
   markRead(@Param('id') id: string, @Request() req) {
     return this.notifications.markRead(id, req.user.id);
+  }
+
+  @Post()
+  @Roles('ADMIN')
+  create(@Body() dto: CreateNotificationDto) {
+    return this.notifications.create(dto);
+  }
+
+  @Delete(':id')
+  delete(@Param('id') id: string, @Request() req) {
+    return this.notifications.delete(id, req.user.id);
   }
 }

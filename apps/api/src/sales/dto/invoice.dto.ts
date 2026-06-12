@@ -32,3 +32,36 @@ export class CreateInvoiceDto {
   @Type(() => InvoiceItemDto)
   items: InvoiceItemDto[];
 }
+
+export class UpdateInvoiceDto {
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  subtotal?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  tax?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  total?: number;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
+  @IsOptional()
+  @IsString()
+  customerName?: string;
+
+  @IsOptional()
+  @IsString()
+  customerEmail?: string;
+}

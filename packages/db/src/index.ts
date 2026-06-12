@@ -1,0 +1,1 @@
+export type { User, Company, Contact, Deal, Product, Invoice, Employee, Department, Project, Task, Vendor, PurchaseOrder, Notification, UserRole, DealStage, InvoiceStatus, TaskStatus, TaskPriority, POStatus, NotificationType } from '@prisma/client';

@@ -5,6 +5,21 @@ import { PrismaService } from '../prisma/prisma.service';
 export class HrService {
   constructor(private prisma: PrismaService) {}
 
+  async getDepartment(id: string) {
+    const dept = await this.prisma.department.findUnique({
+      where: { id },
+      include: { _count: { select: { employees: true } }, employees: { select: { id: true, firstName: true, lastName: true, position: true } } },
+    });
+    if (!dept) throw new NotFoundException('Department not found');
+    return dept;
+  }
+
+  async updateDepartment(id: string, data: { name?: string }) {
+    const dept = await this.prisma.department.findUnique({ where: { id } });
+    if (!dept) throw new NotFoundException('Department not found');
+    return this.prisma.department.update({ where: { id }, data });
+  }
+
   async getDepartments(companyId: string) {
     return this.prisma.department.findMany({
       where: { companyId },
@@ -42,6 +57,15 @@ export class HrService {
       this.prisma.employee.count({ where }),
     ]);
     return { data, total, page, limit };
+  }
+
+  async getEmployee(id: string) {
+    const emp = await this.prisma.employee.findUnique({
+      where: { id },
+      include: { department: { select: { id: true, name: true } } },
+    });
+    if (!emp) throw new NotFoundException('Employee not found');
+    return emp;
   }
 
   async createEmployee(data: any) {

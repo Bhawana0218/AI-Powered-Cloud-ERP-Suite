@@ -5,6 +5,28 @@ import { PrismaService } from '../prisma/prisma.service';
 export class SupplyChainService {
   constructor(private prisma: PrismaService) {}
 
+  async getVendor(id: string, companyId: string) {
+    const vendor = await this.prisma.vendor.findFirst({
+      where: { id, companyId },
+      include: { purchaseOrders: { orderBy: { createdAt: 'desc' }, take: 5 } },
+    });
+    if (!vendor) throw new NotFoundException('Vendor not found');
+    return vendor;
+  }
+
+  async updateVendor(id: string, data: any) {
+    const vendor = await this.prisma.vendor.findUnique({ where: { id } });
+    if (!vendor) throw new NotFoundException('Vendor not found');
+    return this.prisma.vendor.update({ where: { id }, data });
+  }
+
+  async deleteVendor(id: string) {
+    const vendor = await this.prisma.vendor.findUnique({ where: { id } });
+    if (!vendor) throw new NotFoundException('Vendor not found');
+    await this.prisma.vendor.delete({ where: { id } });
+    return { deleted: true };
+  }
+
   async getVendors(companyId: string) {
     return this.prisma.vendor.findMany({
       where: { companyId, isActive: true },
@@ -15,6 +37,28 @@ export class SupplyChainService {
 
   async createVendor(data: { name: string; email?: string; phone?: string; address?: string; companyId: string }) {
     return this.prisma.vendor.create({ data });
+  }
+
+  async getPurchaseOrder(id: string, companyId: string) {
+    const po = await this.prisma.purchaseOrder.findFirst({
+      where: { id, companyId },
+      include: { vendor: { select: { id: true, name: true, email: true, phone: true } } },
+    });
+    if (!po) throw new NotFoundException('Purchase order not found');
+    return po;
+  }
+
+  async updatePurchaseOrder(id: string, data: any) {
+    const po = await this.prisma.purchaseOrder.findUnique({ where: { id } });
+    if (!po) throw new NotFoundException('Purchase order not found');
+    return this.prisma.purchaseOrder.update({ where: { id }, data });
+  }
+
+  async deletePurchaseOrder(id: string) {
+    const po = await this.prisma.purchaseOrder.findUnique({ where: { id } });
+    if (!po) throw new NotFoundException('Purchase order not found');
+    await this.prisma.purchaseOrder.delete({ where: { id } });
+    return { deleted: true };
   }
 
   async getPurchaseOrders(companyId: string, page = 1, limit = 20) {
@@ -34,7 +78,7 @@ export class SupplyChainService {
   async createPurchaseOrder(data: {
     vendorId: string;
     companyId: string;
-    total: number;
+    total?: number;
     notes?: string;
     expectedAt?: string;
   }) {
@@ -49,7 +93,7 @@ export class SupplyChainService {
         number,
         vendorId: data.vendorId,
         companyId: data.companyId,
-        total: data.total,
+        total: data.total ?? 0,
         notes: data.notes,
         expectedAt: data.expectedAt ? new Date(data.expectedAt) : undefined,
         status: 'SENT',

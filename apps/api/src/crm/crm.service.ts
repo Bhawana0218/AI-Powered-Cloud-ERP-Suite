@@ -5,6 +5,15 @@ import { PrismaService } from '../prisma/prisma.service';
 export class CrmService {
   constructor(private prisma: PrismaService) {}
 
+  async getContact(id: string) {
+    const contact = await this.prisma.contact.findUnique({
+      where: { id },
+      include: { owner: { select: { id: true, firstName: true, lastName: true, email: true } }, deals: true },
+    });
+    if (!contact) throw new NotFoundException('Contact not found');
+    return contact;
+  }
+
   async getContacts(companyId: string, search?: string, page = 1, limit = 20) {
     const where: any = { companyId };
     if (search) {
@@ -73,10 +82,29 @@ export class CrmService {
     return this.prisma.deal.create({ data: data as any });
   }
 
+  async getDeal(id: string) {
+    const deal = await this.prisma.deal.findUnique({
+      where: { id },
+      include: {
+        contact: { select: { id: true, firstName: true, lastName: true, email: true } },
+        owner: { select: { id: true, firstName: true, lastName: true, email: true } },
+      },
+    });
+    if (!deal) throw new NotFoundException('Deal not found');
+    return deal;
+  }
+
   async updateDeal(id: string, data: any) {
     const deal = await this.prisma.deal.findUnique({ where: { id } });
     if (!deal) throw new NotFoundException('Deal not found');
     return this.prisma.deal.update({ where: { id }, data });
+  }
+
+  async deleteDeal(id: string) {
+    const deal = await this.prisma.deal.findUnique({ where: { id } });
+    if (!deal) throw new NotFoundException('Deal not found');
+    await this.prisma.deal.delete({ where: { id } });
+    return { deleted: true };
   }
 
   async getPipeline(companyId: string) {

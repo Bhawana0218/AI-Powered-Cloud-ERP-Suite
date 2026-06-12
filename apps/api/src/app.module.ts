@@ -15,6 +15,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { AiModule } from './ai/ai.module';
 import { SupplyChainModule } from './supply-chain/supply-chain.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     AiModule,
     SupplyChainModule,
     NotificationsModule,
+    UsersModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

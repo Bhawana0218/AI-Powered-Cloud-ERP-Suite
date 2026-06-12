@@ -5,6 +5,40 @@ import { PrismaService } from '../prisma/prisma.service';
 export class ProjectsService {
   constructor(private prisma: PrismaService) {}
 
+  async getTasks(companyId: string, projectId?: string) {
+    const where: any = { project: { companyId } };
+    if (projectId) where.projectId = projectId;
+    return this.prisma.task.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        project: { select: { id: true, name: true } },
+        assignee: { select: { id: true, firstName: true, lastName: true } },
+        creator: { select: { id: true, firstName: true, lastName: true } },
+      },
+    });
+  }
+
+  async getTask(id: string) {
+    const task = await this.prisma.task.findUnique({
+      where: { id },
+      include: {
+        project: { select: { id: true, name: true } },
+        assignee: { select: { id: true, firstName: true, lastName: true } },
+        creator: { select: { id: true, firstName: true, lastName: true } },
+      },
+    });
+    if (!task) throw new NotFoundException('Task not found');
+    return task;
+  }
+
+  async deleteTask(id: string) {
+    const task = await this.prisma.task.findUnique({ where: { id } });
+    if (!task) throw new NotFoundException('Task not found');
+    await this.prisma.task.delete({ where: { id } });
+    return { deleted: true };
+  }
+
   async getProjects(companyId: string, page = 1, limit = 20) {
     const [data, total] = await Promise.all([
       this.prisma.project.findMany({

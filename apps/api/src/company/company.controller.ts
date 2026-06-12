@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Patch, Body, Param, UseGuards, Request, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Request, NotFoundException } from '@nestjs/common';
 import { CompanyService } from './company.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
+import { CreateCompanyDto, UpdateCompanyDto } from './dto/company.dto';
 
 @UseGuards(JwtAuthGuard)
 @Roles('ADMIN', 'MANAGER', 'STAFF')
@@ -9,9 +10,15 @@ import { Roles } from '../auth/roles.decorator';
 export class CompanyController {
   constructor(private company: CompanyService) {}
 
+  @Get()
+  @Roles('SUPER_ADMIN')
+  getAll() {
+    return this.company.findAll();
+  }
+
   @Post()
   @Roles('SUPER_ADMIN')
-  create(@Request() req, @Body() dto: { name: string; slug: string; industry?: string; size?: string }) {
+  create(@Request() req, @Body() dto: CreateCompanyDto) {
     return this.company.create({ ...dto, ownerId: req.user.id });
   }
 
@@ -26,7 +33,13 @@ export class CompanyController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: { name?: string; website?: string; industry?: string; size?: string; address?: string; phone?: string }) {
+  update(@Param('id') id: string, @Body() dto: UpdateCompanyDto) {
     return this.company.update(id, dto);
+  }
+
+  @Delete(':id')
+  @Roles('SUPER_ADMIN')
+  delete(@Param('id') id: string) {
+    return this.company.delete(id);
   }
 }

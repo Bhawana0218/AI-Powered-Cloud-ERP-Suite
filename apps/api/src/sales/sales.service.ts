@@ -5,6 +5,19 @@ import { PrismaService } from '../prisma/prisma.service';
 export class SalesService {
   constructor(private prisma: PrismaService) {}
 
+  async getProduct(id: string) {
+    const product = await this.prisma.product.findUnique({ where: { id } });
+    if (!product) throw new NotFoundException('Product not found');
+    return product;
+  }
+
+  async deleteProduct(id: string) {
+    const product = await this.prisma.product.findUnique({ where: { id } });
+    if (!product) throw new NotFoundException('Product not found');
+    await this.prisma.product.delete({ where: { id } });
+    return { deleted: true };
+  }
+
   async getProducts(companyId: string, search?: string, page = 1, limit = 20) {
     const where: any = { companyId };
     if (search) {
@@ -73,6 +86,28 @@ export class SalesService {
       },
       include: { items: true },
     });
+  }
+
+  async getInvoice(id: string) {
+    const invoice = await this.prisma.invoice.findUnique({
+      where: { id },
+      include: { items: true, owner: { select: { id: true, firstName: true, lastName: true } } },
+    });
+    if (!invoice) throw new NotFoundException('Invoice not found');
+    return invoice;
+  }
+
+  async updateInvoice(id: string, data: any) {
+    const invoice = await this.prisma.invoice.findUnique({ where: { id } });
+    if (!invoice) throw new NotFoundException('Invoice not found');
+    return this.prisma.invoice.update({ where: { id }, data });
+  }
+
+  async deleteInvoice(id: string) {
+    const invoice = await this.prisma.invoice.findUnique({ where: { id } });
+    if (!invoice) throw new NotFoundException('Invoice not found');
+    await this.prisma.invoice.delete({ where: { id } });
+    return { deleted: true };
   }
 
   async getInventory(companyId: string) {

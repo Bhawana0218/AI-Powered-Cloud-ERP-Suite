@@ -5,6 +5,13 @@ import { PrismaService } from '../prisma/prisma.service';
 export class CompanyService {
   constructor(private prisma: PrismaService) {}
 
+  async findAll() {
+    return this.prisma.company.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: { _count: { select: { members: true } } },
+    });
+  }
+
   async create(data: { name: string; slug: string; ownerId: string; industry?: string; size?: string }) {
     if (!data.name?.trim()) throw new BadRequestException('Company name is required');
     if (!data.slug?.trim()) throw new BadRequestException('Company slug is required');
@@ -37,5 +44,12 @@ export class CompanyService {
     const company = await this.prisma.company.findUnique({ where: { id } });
     if (!company) throw new NotFoundException('Company not found');
     return this.prisma.company.update({ where: { id }, data });
+  }
+
+  async delete(id: string) {
+    const company = await this.prisma.company.findUnique({ where: { id } });
+    if (!company) throw new NotFoundException('Company not found');
+    await this.prisma.company.delete({ where: { id } });
+    return { deleted: true };
   }
 }

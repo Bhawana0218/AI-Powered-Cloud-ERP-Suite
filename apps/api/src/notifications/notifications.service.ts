@@ -30,4 +30,12 @@ export class NotificationsService {
       data: { read: true },
     });
   }
+
+  async create(data: { title: string; message: string; type?: string; userId: string }) {
+    return this.prisma.notification.create({ data: data as any });
+  }
+
+  async delete(id: string, userId: string) {
+    return this.prisma.notification.deleteMany({ where: { id, userId } });
+  }
 }
