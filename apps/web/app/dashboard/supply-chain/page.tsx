@@ -127,7 +127,7 @@ export default function SupplyChainPage() {
                       <td className="py-2.5 px-3">{o.vendor?.name}</td>
                       <td className="py-2.5 px-3">${Number(o.total).toLocaleString()}</td>
                       <td className="py-2.5 px-3">
-                        <Badge variant={o.status === "RECEIVED" ? "success" : o.status === "SENT" ? "brand" : "secondary"}>{o.status}</Badge>
+                        <Badge variant={o.status === "RECEIVED" ? "success" : o.status === "SENT" ? "brand" : "default"}>{o.status}</Badge>
                       </td>
                     </tr>
                   ))}

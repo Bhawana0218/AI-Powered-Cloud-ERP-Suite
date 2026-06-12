@@ -1,8 +1,10 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Roles } from '../auth/roles.decorator';
 
 @UseGuards(JwtAuthGuard)
+@Roles('ADMIN', 'MANAGER', 'STAFF')
 @Controller('projects')
 export class ProjectsController {
   constructor(private projects: ProjectsService) {}

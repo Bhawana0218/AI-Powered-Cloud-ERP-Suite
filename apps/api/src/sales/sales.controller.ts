@@ -1,8 +1,10 @@
 import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
 import { SalesService } from './sales.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Roles } from '../auth/roles.decorator';
 
 @UseGuards(JwtAuthGuard)
+@Roles('ADMIN', 'MANAGER', 'STAFF')
 @Controller('sales')
 export class SalesController {
   constructor(private sales: SalesService) {}

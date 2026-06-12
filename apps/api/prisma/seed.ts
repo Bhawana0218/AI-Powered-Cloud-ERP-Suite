@@ -83,11 +83,11 @@ async function main() {
     { firstName: 'Anna', lastName: 'Martin', email: 'anna@demo.com', position: 'Content Writer', salary: 55000, dept: 'Marketing' },
   ];
 
-  for (const emp of employeeData) {
-    const dept = departments.find(d => d.name === emp.dept);
+  for (const { dept: deptName, ...empData } of employeeData) {
+    const dept = departments.find(d => d.name === deptName);
     await prisma.employee.create({
       data: {
-        ...emp,
+        ...empData,
         departmentId: dept!.id,
         companyId: company.id,
         hireDate: new Date('2024-01-15'),
@@ -158,9 +158,9 @@ async function main() {
     { name: 'Monitor 27" 4K', sku: 'TECH-004', price: 699, cost: 450, stock: 8, minStock: 15, category: 'Electronics' },
   ];
 
-  for (const p of productData) {
+  for (const { stock, minStock, ...pData } of productData) {
     await prisma.product.create({
-      data: { ...p, companyId: company.id },
+      data: { ...pData, stockQty: stock, minStockQty: minStock, companyId: company.id },
     });
   }
   console.log('Products created:', productData.length);

@@ -1,7 +1,15 @@
 import { cn } from "@/lib/utils";
 
 function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
-  return <div className={cn("animate-pulse rounded-lg bg-muted", className)} {...props} />;
+  return (
+    <div
+      className={cn(
+        "animate-pulse rounded-lg bg-gradient-to-r from-muted via-muted/80 to-muted bg-[length:200%_100%] animate-shimmer",
+        className
+      )}
+      {...props}
+    />
+  );
 }
 
 export { Skeleton };

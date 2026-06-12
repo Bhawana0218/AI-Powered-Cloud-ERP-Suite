@@ -1,31 +1,23 @@
-import * as React from "react";
-import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "@/lib/utils";
+import { ReactNode } from "react";
 
-const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors",
-  {
-    variants: {
-      variant: {
-        default: "border-transparent bg-primary text-primary-foreground",
-        secondary: "border-transparent bg-secondary text-secondary-foreground",
-        success: "border-transparent bg-emerald-100 text-emerald-700",
-        warning: "border-transparent bg-amber-100 text-amber-700",
-        destructive: "border-transparent bg-red-100 text-red-700",
-        outline: "text-foreground",
-        brand: "border-transparent bg-indigo-100 text-indigo-700",
-      },
-    },
-    defaultVariants: { variant: "default" },
-  }
-);
-
-function Badge({
-  className,
-  variant,
-  ...props
-}: React.ComponentProps<"span"> & VariantProps<typeof badgeVariants>) {
-  return <span className={cn(badgeVariants({ variant }), className)} {...props} />;
+interface BadgeProps {
+  children: ReactNode;
+  variant?: "brand" | "success" | "warning" | "destructive" | "default";
+  className?: string;
 }
 
-export { Badge, badgeVariants };
+const variants = {
+  brand: "badge-brand",
+  success: "badge-success",
+  warning: "badge-warning",
+  destructive: "badge-destructive",
+  default: "bg-zinc-100 text-zinc-700 border border-zinc-200",
+};
+
+export function Badge({ children, variant = "default", className = "" }: BadgeProps) {
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${variants[variant]} ${className}`}>
+      {children}
+    </span>
+  );
+}

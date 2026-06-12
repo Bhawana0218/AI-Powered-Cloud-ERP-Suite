@@ -1,8 +1,10 @@
 import { Controller, Get, Post, Body, Query, UseGuards, Request } from '@nestjs/common';
 import { SupplyChainService } from './supply-chain.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Roles } from '../auth/roles.decorator';
 
 @UseGuards(JwtAuthGuard)
+@Roles('ADMIN', 'MANAGER', 'STAFF')
 @Controller('supply-chain')
 export class SupplyChainController {
   constructor(private supplyChain: SupplyChainService) {}

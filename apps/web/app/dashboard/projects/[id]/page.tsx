@@ -106,7 +106,7 @@ export default function ProjectDetailPage() {
                   <h1 className="text-xl font-semibold">{project.name}</h1>
                   <p className="text-sm text-muted-foreground mt-1">{project.description || "No description"}</p>
                 </div>
-                <Badge variant={project.status === "active" ? "brand" : "secondary"}>
+                <Badge variant={project.status === "active" ? "brand" : "default"}>
                   {project.status?.replace(/_/g, " ")}
                 </Badge>
               </div>
@@ -152,12 +152,12 @@ export default function ProjectDetailPage() {
                         <tr key={t.id} className="border-b border-border/50 hover:bg-muted/30">
                           <td className="px-4 py-3 font-medium">{t.title}</td>
                           <td className="px-4 py-3">
-                            <Badge variant={t.status === "DONE" ? "success" : t.status === "IN_PROGRESS" ? "brand" : "secondary"}>
+                            <Badge variant={t.status === "DONE" ? "success" : t.status === "IN_PROGRESS" ? "brand" : "default"}>
                               {t.status?.replace(/_/g, " ")}
                             </Badge>
                           </td>
                           <td className="px-4 py-3">
-                            <Badge variant={t.priority === "HIGH" || t.priority === "URGENT" ? "destructive" : t.priority === "MEDIUM" ? "warning" : "secondary"}>
+                            <Badge variant={t.priority === "HIGH" || t.priority === "URGENT" ? "destructive" : t.priority === "MEDIUM" ? "warning" : "default"}>
                               {t.priority}
                             </Badge>
                           </td>

@@ -111,7 +111,7 @@ export default function AiForecastPage() {
             {insights.map((ins) => (
               <div key={ins.id} className="p-3 rounded-lg border border-border hover:border-indigo-200 transition-colors">
                 <div className="flex items-center gap-2 mb-1">
-                  <Badge variant={ins.impact === "HIGH" ? "destructive" : ins.impact === "MEDIUM" ? "warning" : "secondary"} className="text-[10px]">
+                  <Badge variant={ins.impact === "HIGH" ? "destructive" : "warning"} className="text-[10px]">
                     {ins.impact}
                   </Badge>
                   <span className="text-xs text-muted-foreground">{ins.type}</span>
