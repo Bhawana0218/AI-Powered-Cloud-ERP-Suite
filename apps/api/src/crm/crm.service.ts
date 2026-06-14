@@ -67,11 +67,44 @@ export class CrmService {
   }
 
   async createDeal(data: {
-    title: string; value?: number; stage?: string; probability?: number;
-    closeDate?: string; contactId?: string; companyId: string; ownerId?: string; notes?: string;
-  }) {
-    return this.prisma.deal.create({ data: data as any });
+  title: string;
+  value?: number;
+  stage?: string;
+  probability?: number;
+  closeDate?: string;
+  contactId?: string;
+  companyId: string;
+  ownerId?: string;
+  notes?: string;
+}) {
+  const createData: any = {
+    title: data.title,
+    value: data.value || 0,
+    stage: data.stage,
+    probability: data.probability,
+    companyId: data.companyId,
+    ownerId: data.ownerId,
+    notes: data.notes,
+  };
+
+  if (data.closeDate) {
+    createData.closeDate = new Date(data.closeDate);
   }
+
+  if (data.contactId) {
+    const contact = await this.prisma.contact.findUnique({
+      where: { id: data.contactId },
+    });
+
+    if (contact) {
+      createData.contactId = data.contactId;
+    }
+  }
+
+  return this.prisma.deal.create({
+    data: createData,
+  });
+}
 
   async updateDeal(id: string, data: any) {
     const deal = await this.prisma.deal.findUnique({ where: { id } });

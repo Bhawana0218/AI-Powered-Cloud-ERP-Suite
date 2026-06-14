@@ -2,13 +2,15 @@ import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/co
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
+import { CompanyService } from '../company/company.service';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private prisma: PrismaService,
-    private jwt: JwtService,
-  ) {}
+		private prisma: PrismaService,
+		private jwt: JwtService,
+		private companyService: CompanyService,
+) {}
 
   async register(email: string, password: string, firstName?: string, lastName?: string) {
     const existing = await this.prisma.user.findUnique({ where: { email } });
@@ -16,10 +18,23 @@ export class AuthService {
 
     const hashed = await bcrypt.hash(password, 10);
     const user = await this.prisma.user.create({
-      data: { email, password: hashed, firstName, lastName },
-    });
+  data: { email, password: hashed, firstName, lastName },
+});
 
-    return this.signToken(user.id, user.email);
+const slug =
+  (firstName || 'company')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '-') +
+  '-' +
+  Date.now();
+
+await this.companyService.create({
+  name: `${firstName || 'My'} Company`,
+  slug,
+  ownerId: user.id,
+});
+
+return this.signToken(user.id, user.email);
   }
 
   async login(email: string, password: string) {

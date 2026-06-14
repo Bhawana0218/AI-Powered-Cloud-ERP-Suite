@@ -32,6 +32,10 @@ export class ProjectsController {
     return this.projects.deleteProject(id);
   }
 
+@Get(':id/tasks')
+getTasks(@Param('id') id: string) {
+  return this.projects.getTasks(id);
+}
   @Post('tasks')
   createTask(@Request() req, @Body() dto: any) {
     return this.projects.createTask({ ...dto, creatorId: req.user.id });

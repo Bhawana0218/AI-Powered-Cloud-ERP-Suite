@@ -21,7 +21,6 @@ const emptyForm = { title: "", value: 0, stage: "LEAD", probability: 50, closeDa
 
 export default function DealsPage() {
   const [deals, setDeals] = useState<Deal[]>([]);
-const [contacts, setContacts] = useState<any[]>([]);
   const [stageFilter, setStageFilter] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);

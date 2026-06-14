@@ -56,19 +56,28 @@ export default function ProjectDetailPage() {
 
   useEffect(() => { fetchData(); }, [id]);
 
-  const handleAddTask = async () => {
-    setSaving(true);
-    try {
-      await apiPost(`/projects/${id}/tasks`, taskForm);
-      setShowTaskModal(false);
-      setTaskForm(emptyTaskForm);
-      fetchData();
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || "Failed to add task");
-    } finally {
-      setSaving(false);
-    }
-  };
+const handleAddTask = async () => {
+  setSaving(true);
+
+  try {
+    await apiPost("/projects/tasks", {
+      ...taskForm,
+      projectId: id,
+    });
+
+    setShowTaskModal(false);
+    setTaskForm(emptyTaskForm);
+    fetchData();
+  } catch (err: any) {
+    setError(
+      err?.response?.data?.message ||
+      err?.message ||
+      "Failed to add task"
+    );
+  } finally {
+    setSaving(false);
+  }
+};
 
   if (loading) {
     return (

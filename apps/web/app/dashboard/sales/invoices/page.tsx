@@ -52,7 +52,10 @@ export default function InvoicesPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await apiPost("/sales/invoices", { customerName, lineItems });
+await apiPost("/sales/invoices", {
+  customerName,
+  items: lineItems,
+});
       setShowModal(false);
       setCustomerName("");
       setLineItems([{ ...emptyLineItem }]);
