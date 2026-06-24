@@ -79,7 +79,10 @@ export class CrmService {
     title: string; value?: number; stage?: string; probability?: number;
     closeDate?: string; contactId?: string; companyId: string; ownerId?: string; notes?: string;
   }) {
-    return this.prisma.deal.create({ data: data as any });
+    const { closeDate, ...rest } = data;
+    return this.prisma.deal.create({
+      data: { ...rest, closeDate: closeDate ? new Date(closeDate) : undefined } as any,
+    });
   }
 
   async getDeal(id: string) {
@@ -97,7 +100,11 @@ export class CrmService {
   async updateDeal(id: string, data: any) {
     const deal = await this.prisma.deal.findUnique({ where: { id } });
     if (!deal) throw new NotFoundException('Deal not found');
-    return this.prisma.deal.update({ where: { id }, data });
+    const { closeDate, ...rest } = data;
+    return this.prisma.deal.update({
+      where: { id },
+      data: { ...rest, closeDate: closeDate ? new Date(closeDate) : undefined } as any,
+    });
   }
 
   async deleteDeal(id: string) {

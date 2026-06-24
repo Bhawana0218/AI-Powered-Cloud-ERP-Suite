@@ -57,7 +57,10 @@ export class ProjectsService {
   }
 
   async createProject(data: { name: string; description?: string; startDate?: string; endDate?: string; budget?: number; companyId: string; ownerId?: string }) {
-    return this.prisma.project.create({ data });
+    const { startDate, endDate, ...rest } = data;
+    return this.prisma.project.create({
+      data: { ...rest, startDate: startDate ? new Date(startDate) : undefined, endDate: endDate ? new Date(endDate) : undefined },
+    });
   }
 
   async getProject(id: string) {
@@ -81,20 +84,31 @@ export class ProjectsService {
   async updateProject(id: string, data: any) {
     const project = await this.prisma.project.findUnique({ where: { id } });
     if (!project) throw new NotFoundException('Project not found');
-    return this.prisma.project.update({ where: { id }, data });
+    const { startDate, endDate, ...rest } = data;
+    return this.prisma.project.update({
+      where: { id },
+      data: { ...rest, startDate: startDate ? new Date(startDate) : undefined, endDate: endDate ? new Date(endDate) : undefined } as any,
+    });
   }
 
   async createTask(data: {
     title: string; description?: string; status?: string; priority?: string;
     dueDate?: string; projectId: string; assigneeId?: string; creatorId?: string;
   }) {
-    return this.prisma.task.create({ data: data as any });
+    const { dueDate, ...rest } = data;
+    return this.prisma.task.create({
+      data: { ...rest, dueDate: dueDate ? new Date(dueDate) : undefined } as any,
+    });
   }
 
   async updateTask(id: string, data: any) {
     const task = await this.prisma.task.findUnique({ where: { id } });
     if (!task) throw new NotFoundException('Task not found');
-    return this.prisma.task.update({ where: { id }, data });
+    const { dueDate, ...rest } = data;
+    return this.prisma.task.update({
+      where: { id },
+      data: { ...rest, dueDate: dueDate ? new Date(dueDate) : undefined },
+    });
   }
 
   async deleteProject(id: string) {

@@ -69,13 +69,20 @@ export class HrService {
   }
 
   async createEmployee(data: any) {
-    return this.prisma.employee.create({ data });
+    const { hireDate, departmentId, ...rest } = data;
+    return this.prisma.employee.create({
+      data: { ...rest, departmentId: departmentId || undefined, hireDate: hireDate ? new Date(hireDate) : undefined },
+    });
   }
 
   async updateEmployee(id: string, data: any) {
     const emp = await this.prisma.employee.findUnique({ where: { id } });
     if (!emp) throw new NotFoundException('Employee not found');
-    return this.prisma.employee.update({ where: { id }, data });
+    const { hireDate, departmentId, ...rest } = data;
+    return this.prisma.employee.update({
+      where: { id },
+      data: { ...rest, departmentId: departmentId || undefined, hireDate: hireDate ? new Date(hireDate) : undefined },
+    });
   }
 
   async deleteEmployee(id: string) {
